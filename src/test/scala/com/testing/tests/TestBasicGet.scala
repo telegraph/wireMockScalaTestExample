@@ -15,8 +15,7 @@ import scala.io.Source
 class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll with Matchers {
 
   val PORT= "8080"
-  val jsonPath = "/Users/toorap/commerce-api2/wireMockTests/src/resources"
-
+  val jsonPath = getClass.getResource("").getPath + "/../../../../../src/resources"
   override def beforeAll() {
     WireMockServer.configue(PORT)
     WireMockServer.setUpMockResponses(jsonPath)
