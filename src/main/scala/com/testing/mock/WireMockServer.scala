@@ -9,10 +9,8 @@ import scala.io.Source
 
 /**
  * @author ${parsh.toora}
- *         GET http://host:port/__admin/requests will get log
- *         DELETE http://host:port/__admin/requests will delete calls
- *         GET http://localhost:8080/__admin/requests/unmatched will show unmatched
- */
+  */
+
 object WireMockServer {
 
   var wireMockServer: WireMockServer = null;

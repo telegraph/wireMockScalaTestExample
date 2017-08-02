@@ -30,15 +30,15 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
     scenario("Happy path") {
 
-      Given("I have wiremock running")
+      Given("I have Wiremock running")
 
-      WireMockServer.start
+        WireMockServer.start
 
-      When("i call GET on the stubbed endpoint")
+      When("I call GET on the stubbed endpoint")
 
        val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/happy").mkString
 
-      Then("the it should respond with the correct paylod")
+      Then("the it should respond with the correct payload")
 
         resp should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
     }
