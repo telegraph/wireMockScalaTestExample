@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.core.Admin
 import com.github.tomakehurst.wiremock.extension.{Parameters, PostServeAction}
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 
@@ -19,11 +20,23 @@ object WireMockServer {
   var wireMockServer: WireMockServer = null;
 
   def start = {
+    assert(stateCache.errorsList.length==0, stateCache.errorsList.reverse.last)
     wireMockServer.start()
   }
 
   def stop = {
-    wireMockServer.start()
+    assert(stateCache.errorsList.length==0, stateCache.errorsList.reverse.last)
+    wireMockServer.stop()
+  }
+
+  def configue(inputPort:String)  = {
+    var port: Int = 8080
+    if (inputPort != null)
+      port = inputPort.toInt
+
+    println ( s"running on port $port")
+
+    wireMockServer = new WireMockServer(options().port(port).extensions(new ValidateStateModel()))
   }
 
   def setUpMockResponses(filePath:String) = {
@@ -75,21 +88,12 @@ object WireMockServer {
           .withStatus(200)))
   }
 
-  def configue(inputPort:String)  = {
-    var port: Int = 8080
-    if (inputPort != null)
-      port = inputPort.toInt
-
-    println ( s"running on port $port")
-
-    wireMockServer = new WireMockServer(options().port(port).extensions(new ValidateStateModel()))
+  object stateCache {
+    var count = 0
+    var errorsList = ListBuffer[String]()
   }
 
   class ValidateStateModel extends PostServeAction {
-
-    object stateCache {
-      var count = 0
-    }
 
     override def getName: String = "validateState"
 
@@ -102,7 +106,7 @@ object WireMockServer {
       } else if (List("put", "post").contains(action)) {
         stateCache.count = stateCache.count + 1
       } else if (action == "delete" && stateCache.count==0) {
-        throw new AssertionError("Cannot delete from empty state ... doh!")
+        stateCache.errorsList += "Error in call:" + serveEvent.getRequest.getAbsoluteUrl + " - Cannot delete from empty state ... doh!"
       } else if (action=="delete" && stateCache.count>0) {
         stateCache.count = stateCache.count -1
       }
