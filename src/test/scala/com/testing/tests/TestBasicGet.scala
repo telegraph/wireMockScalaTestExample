@@ -12,7 +12,7 @@ import scala.io.Source
   * Created by toorap on 01/08/2017.
   * Example usage of Wiremock
   */
-class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll with Matchers {
+class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {
 
   val PORT= "8080"
   val jsonPath = getClass.getResource("").getPath + "/../../../../../src/resources"
@@ -26,9 +26,9 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
   }
 
 
-  feature("Basic GET") {
+  feature("Basic CRUD") {
 
-    scenario("Happy path") {
+    scenario("Happy path GET") {
 
       Given("I have Wiremock running")
 
@@ -41,6 +41,52 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
       Then("the it should respond with the correct payload")
 
         resp should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
+    }
+
+
+    scenario("Happy path PUT") {
+
+      Given("I have Wiremock running")
+
+        //
+
+      When("I call PUT on the stubbed endpoint")
+
+        val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/put").mkString
+
+      Then("the it should respond with the correct payload")
+
+        resp should equal("Successfully added")
+    }
+
+    scenario("Happy path DELETE") {
+
+      Given("I have Wiremock running")
+
+      //
+
+      When("I call DELETE on the stubbed endpoint")
+
+      val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
+
+      Then("the it should respond with the correct payload")
+
+      resp should equal("Successfully deleted")
+    }
+
+    scenario("Illogical path DELETE") {
+
+      Given("I have Wiremock running")
+
+      //
+
+      When("I call DELETE on the stubbed endpoint")
+
+      val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
+
+      Then("the it should respond with the correct payload")
+
+      resp should equal("Successfully deleted")
     }
 
   }
