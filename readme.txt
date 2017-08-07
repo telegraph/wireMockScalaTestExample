@@ -3,3 +3,4 @@ build image  - docker build -t wiremockserver .
 run image    - docker run -p 8080:8081 wiremockserver
 api          - http://localhost:8080/resource/happy
 Wiremock log - GET http://host:port/__admin/requests
+CLI test     - mvn clean package
