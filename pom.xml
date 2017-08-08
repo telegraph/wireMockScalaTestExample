@@ -72,6 +72,10 @@
         <configuration>
           <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
           <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+          <excludes>
+            <exclude>**/test/*</exclude>
+            <exclude>**/WireMockDriver*</exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>
@@ -87,6 +91,32 @@
               <goal>report</goal>
             </goals>
           </execution>
+
+
+
+          <execution>
+            <id>jacoco-check</id>
+            <phase>package</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule implementation="org.jacoco.maven.RuleConfiguration">
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.50</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+
+
         </executions>
       </plugin>
       <plugin>

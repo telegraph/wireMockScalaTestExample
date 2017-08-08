@@ -79,15 +79,24 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 //
 //      Given("I have Wiremock running")
 //
-//      WireMockServer.start
+//        WireMockServer.start
 //
 //      When("I call DELETE on the stubbed endpoint")
 //
-//      val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
+//        var exception: Exception=null
 //
-//      Then("the it should respond with the correct payload")
+//        try {
+//          val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
+//        } catch {
+//          case ex: Exception => {
+//            exception = ex
+//          }
+//        }
 //
-//      resp should equal("Successfully deleted")
+//      Then("the it should return an error")
+//
+//        exception should not equal (null)
+//
 //    }
 
 
