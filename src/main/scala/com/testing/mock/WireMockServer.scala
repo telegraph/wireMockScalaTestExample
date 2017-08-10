@@ -63,7 +63,8 @@ object WireMockServer {
           .withStatus(200)))
 
     wireMockServer.stubFor(post(urlMatching(".*/post$"))
-      .withRequestBody(equalToJson("{ \"this\": \"data\" }"))
+      .withRequestBody(matchingJsonPath("$.this"))
+      .withRequestBody(matchingJsonPath("$.other"))
       .willReturn(
         aResponse()
           .withTransformerParameter("action", "post")

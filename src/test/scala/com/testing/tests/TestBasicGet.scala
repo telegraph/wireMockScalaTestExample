@@ -63,7 +63,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
       val url = s"http://localhost:$PORT/resource/post";
       val post = new HttpPost(url)
       post.setHeader("Content-type", "application/json")
-      post.setEntity(new StringEntity("{ \"this\": \"data\" }"))
+      post.setEntity(new StringEntity("{ \"this\": \"data\", \"other\": \"more\" }"))
       val response = (new DefaultHttpClient).execute(post)
 
       Then("the it should respond with the correct payload")
