@@ -1,8 +1,15 @@
 package com.testing.tests
 
 import java.io.File
+import java.util
 
 import com.testing.mock.WireMockServer
+import org.apache.http.NameValuePair
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.entity.StringEntity
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.message.BasicNameValuePair
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import org.scalatest._
 
@@ -45,7 +52,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
     }
 
 
-    scenario("Happy path PUT") {
+    scenario("Happy path POST") {
 
       Given("I have Wiremock running")
 
@@ -53,11 +60,15 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call PUT on the stubbed endpoint")
 
-        val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/put").mkString
+      val url = s"http://localhost:$PORT/resource/post";
+      val post = new HttpPost(url)
+      post.setHeader("Content-type", "application/json")
+      post.setEntity(new StringEntity("{ \"this\": \"data\" }"))
+      val response = (new DefaultHttpClient).execute(post)
 
       Then("the it should respond with the correct payload")
 
-        resp should equal("Successfully added")
+      response.getStatusLine.getStatusCode should equal(201)
     }
 
     scenario("Happy path DELETE") {
@@ -84,7 +95,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 //      When("I call DELETE on the stubbed endpoint")
 //
 //        var exception: Exception=null
-//
+//§§
 //        try {
 //          val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
 //        } catch {

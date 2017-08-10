@@ -62,10 +62,11 @@ object WireMockServer {
           .withBody("Successfully deleted")
           .withStatus(200)))
 
-    wireMockServer.stubFor(get(urlMatching(".*/put$"))
+    wireMockServer.stubFor(post(urlMatching(".*/post$"))
+      .withRequestBody(equalToJson("{ \"this\": \"data\" }"))
       .willReturn(
         aResponse()
-          .withTransformerParameter("action", "put")
+          .withTransformerParameter("action", "post")
           .withHeader("Content-Type", "application/json")
           .withBody("Successfully added")
           .withStatus(201)))
