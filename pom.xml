@@ -23,6 +23,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.atlassian.oai</groupId>
+      <artifactId>swagger-request-validator-wiremock</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>

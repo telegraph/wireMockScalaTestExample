@@ -1,5 +1,8 @@
 package com.testing.mock
 
+import com.atlassian.oai.validator.SwaggerRequestResponseValidator
+import com.atlassian.oai.validator
+import com.atlassian.oai.validator.wiremock.SwaggerValidationListener
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
@@ -9,6 +12,8 @@ import com.github.tomakehurst.wiremock.core.Admin
 import com.github.tomakehurst.wiremock.extension.{Parameters, PostServeAction, ResponseTransformer}
 import com.github.tomakehurst.wiremock.http.{Request, Response, ResponseDefinition}
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
+import com.atlassian.oai.validator.wiremock.SwaggerValidationListener
+import com.testing.mock.WireMockServer.wireMockListener
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -21,16 +26,25 @@ import scala.io.Source
 object WireMockServer {
 
   var wireMockServer: WireMockServer = null;
+  val SWAGGER_JSON_URL: String = "http://petstore.swagger.io/v2/swagger.json"
+  var wireMockListener : SwaggerValidationListener = null
+
+
+  val validationListener = null
 
   def start = {
     wireMockServer.start()
+
   }
 
   def stop = {
     wireMockServer.stop()
+//    wireMockListener.assertValidationPassed()
+    wireMockListener.reset()
   }
 
   def configue(inputPort:String)  = {
+
     var port: Int = 8080
     if (inputPort != null)
       port = inputPort.toInt
@@ -38,6 +52,8 @@ object WireMockServer {
     println ( s"running on port $port")
 
     wireMockServer = new WireMockServer(options().port(port).extensions(new ValidateStateTransitionTransformer()))
+    wireMockListener =  new SwaggerValidationListener(SWAGGER_JSON_URL)
+    wireMockServer.addMockServiceRequestListener(wireMockListener)
   }
 
   def setUpMockResponses(filePath:String) = {
@@ -60,7 +76,9 @@ object WireMockServer {
           .withTransformerParameter("action", "delete")
           .withHeader("Content-Type", "application/json")
           .withBody("Successfully deleted")
-          .withStatus(200)))
+          .withStatus(200))
+
+    )
 
     wireMockServer.stubFor(post(urlMatching(".*/post$"))
       .withRequestBody(matchingJsonPath("$.this"))
@@ -117,6 +135,10 @@ object WireMockServer {
   class ValidateStateTransitionTransformer extends ResponseTransformer {
 
     override def transform(request :Request, response: Response, files :FileSource, parameters: Parameters) : Response = {
+
+      if (wireMockListener!=null)
+        println ("here" + wireMockListener.getReport.getMessages.toString)
+
 
       if (ValidateStateModel.isValidStateTransition(parameters.getString("action"))==false) {
 
