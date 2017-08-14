@@ -44,7 +44,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call GET on the stubbed endpoint")
 
-       val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/happy").mkString
+       val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/pet/findByStatus?status=available").mkString
 
       Then("the it should respond with the correct payload")
 

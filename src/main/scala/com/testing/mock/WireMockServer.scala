@@ -40,7 +40,7 @@ object WireMockServer {
   def stop = {
     wireMockServer.stop()
 //    wireMockListener.assertValidationPassed()
-    wireMockListener.reset()
+//    wireMockListener.reset()
   }
 
   def configue(inputPort:String)  = {
@@ -61,6 +61,14 @@ object WireMockServer {
     var jsonPath = "home"
     if (filePath!=null)
       jsonPath=filePath
+
+    wireMockServer.stubFor(get(urlMatching(".*/findByStatus.*"))
+      .willReturn(
+        aResponse()
+          .withTransformerParameter("action", "happy")
+          .withHeader("Content-Type", "application/json")
+          .withBody(Source.fromFile(s"$jsonPath/happy.json").mkString)
+          .withStatus(200)))
 
     wireMockServer.stubFor(get(urlMatching(".*/happy$"))
       .willReturn(
