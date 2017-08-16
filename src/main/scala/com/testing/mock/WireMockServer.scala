@@ -25,9 +25,16 @@ object WireMockServer {
     wireMockServer.start()
   }
 
-  // stop wiremock and validate state transitions
+  // normally this would be the step that catches the contract validation errors
+  // but for this example we are checking in the tests explicitly
+  // there are alternative approaches
   def stop = {
-    wireMockServer.stop()
+    //validateContract
+    wireMockServer.stop
+  }
+
+  // validate contract
+  def validateContract = {
     wireMockListener.assertValidationPassed()
     wireMockListener.reset()
   }

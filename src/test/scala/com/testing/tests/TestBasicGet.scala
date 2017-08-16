@@ -35,13 +35,13 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
     WireMockServer.configue(PORT, jsonPath)
   }
 
-  // normally this would be the step that catches the contract validation errors
-  // bit for this example we are checking in the test explicitly
   override def afterEach() {
-    //WireMockServer.stop
+    WireMockServer.stop
   }
 
-
+  /*
+  The test sceanrios
+   */
   feature("Basic CRUD for it") {
 
     scenario("Happy path GET") {
@@ -135,7 +135,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
         var exception: Exception = null
         try {
-          WireMockServer.stop
+          WireMockServer.validateContract
         } catch {
          case ex: SwaggerValidationException =>
             exception = ex
@@ -161,7 +161,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       var exception: Exception = null
       try {
-        WireMockServer.stop
+        WireMockServer.validateContract
       } catch {
         case ex: SwaggerValidationException =>
           exception = ex
