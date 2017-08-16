@@ -99,7 +99,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
     scenario("Illogical state transtion for DELETE") {
 
-      Given("I have Wiremock running")
+      Given("I have Wiremock running and I have deleted it")
 
         WireMockServer.start
 
