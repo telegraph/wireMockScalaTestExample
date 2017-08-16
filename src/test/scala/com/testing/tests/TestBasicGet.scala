@@ -124,14 +124,14 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       WireMockServer.start
 
-      When("I call POST on the stubbed endpoint")
+      When("I call POST on the stubbed endpoint with in invalid payload")
 
         val post = new HttpPost(url)
         post.setHeader("Content-type", "application/json")
         post.setEntity(new StringEntity("{ \"this\": \"this\", \"other\": 1 }"))
         val response = (new DefaultHttpClient).execute(post)
 
-      Then("the it should respond with an error")
+      Then("it should respond with an error")
 
         var exception: Exception = null
         try {
@@ -149,7 +149,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       WireMockServer.start
 
-      When("I call POST on the stubbed endpoint")
+      When("I call POST on the stubbed endpoint where the stub returns the wrong status")
 
       val post = new HttpPost(url)
       post.setHeader("Content-type", "application/json")
