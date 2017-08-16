@@ -1,19 +1,24 @@
 package com.testing.tests
 
 import java.io.File
+import java.net.{HttpURLConnection, URL}
 import java.util
 
 import com.testing.mock.WireMockServer
 import org.apache.http.NameValuePair
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpPost}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.message.BasicNameValuePair
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import org.scalatest._
+import java.net.{HttpURLConnection, URL}
+
+import org.apache.http.util.EntityUtils
 
 import scala.io.Source
+
 
 /**
   * Created by toorap on 01/08/2017.
@@ -25,8 +30,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
   val jsonPath = getClass.getResource("").getPath + "/../../../../../src/resources"
 
   override def beforeAll() {
-    WireMockServer.configue(PORT)
-    WireMockServer.setUpMockResponses(jsonPath)
+    WireMockServer.configue(PORT, jsonPath)
   }
 
   override def afterEach() {
@@ -34,7 +38,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
   }
 
 
-  feature("Basic CRUD") {
+  feature("Basic CRUD for it") {
 
     scenario("Happy path GET") {
 
@@ -44,11 +48,15 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call GET on the stubbed endpoint")
 
-       val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/pet/findByStatus?status=available").mkString
+        val url = s"http://localhost:$PORT/resource/it";
+        val get = new HttpGet(url)
+        get.setHeader("Accept", "text/html")
+        val response = (new DefaultHttpClient).execute(get)
+        val responseBody = EntityUtils.toString(response.getEntity())
 
       Then("the it should respond with the correct payload")
 
-        resp should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
+      responseBody should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
     }
 
 
@@ -56,19 +64,19 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-      WireMockServer.start
+        WireMockServer.start
 
-      When("I call PUT on the stubbed endpoint")
+      When("I call POST on the stubbed endpoint")
 
-      val url = s"http://localhost:$PORT/resource/post";
-      val post = new HttpPost(url)
-      post.setHeader("Content-type", "application/json")
-      post.setEntity(new StringEntity("{ \"this\": \"data\", \"other\": \"more\" }"))
-      val response = (new DefaultHttpClient).execute(post)
+        val url = s"http://localhost:$PORT/resource/it";
+        val post = new HttpPost(url)
+        post.setHeader("Content-type", "application/json")
+        post.setEntity(new StringEntity("{ \"this\": \"this\", \"other\": \"more\" }"))
+        val response = (new DefaultHttpClient).execute(post)
 
       Then("the it should respond with the correct payload")
 
-      response.getStatusLine.getStatusCode should equal(201)
+        response.getStatusLine.getStatusCode should equal(201)
     }
 
     scenario("Happy path DELETE") {
@@ -79,11 +87,15 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call DELETE on the stubbed endpoint")
 
-      val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
+        val url = s"http://localhost:$PORT/resource/it";
+        val delete = new HttpDelete(url)
+        delete.setHeader("Content-type", "application/json")
+        val response = (new DefaultHttpClient).execute(delete)
+        val responseBody = EntityUtils.toString(response.getEntity())
 
       Then("the it should respond with the correct payload")
 
-      resp should equal("Successfully deleted")
+        responseBody should equal("Successfully deleted")
     }
 
     scenario("Illogical path DELETE") {
@@ -94,18 +106,15 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call DELETE on the stubbed endpoint")
 
-        var exception: Exception=null
-        try {
-          val resp = scala.io.Source.fromURL(s"http://localhost:$PORT/resource/delete").mkString
-        } catch {
-          case ex: Exception => {
-            exception = ex
-          }
-        }
+        val url = s"http://localhost:$PORT/resource/it";
+        val delete = new HttpDelete(url)
+        delete.setHeader("Content-type", "application/json")
+        val response = (new DefaultHttpClient).execute(delete)
+        val responseBody = EntityUtils.toString(response.getEntity())
 
       Then("the it should return an error")
 
-        exception should not equal (null)
+        responseBody should equal("Invalid state transition for action:delete")
 
     }
 
