@@ -15,6 +15,7 @@ import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import org.scalatest._
 import java.net.{HttpURLConnection, URL}
 
+import com.atlassian.oai.validator.wiremock.SwaggerValidationListener.SwaggerValidationException
 import org.apache.http.util.EntityUtils
 
 import scala.io.Source
@@ -28,6 +29,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
   val PORT= "8080"
   val jsonPath = getClass.getResource("").getPath + "/../../../../../src/resources"
+  val url = s"http://localhost:$PORT/resource/it";
 
   override def beforeAll() {
     WireMockServer.configue(PORT, jsonPath)
@@ -48,7 +50,6 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call GET on the stubbed endpoint")
 
-        val url = s"http://localhost:$PORT/resource/it";
         val get = new HttpGet(url)
         get.setHeader("Accept", "text/html")
         val response = (new DefaultHttpClient).execute(get)
@@ -56,7 +57,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Then("the it should respond with the correct payload")
 
-      responseBody should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
+        responseBody should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
     }
 
 
@@ -68,7 +69,6 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call POST on the stubbed endpoint")
 
-        val url = s"http://localhost:$PORT/resource/it";
         val post = new HttpPost(url)
         post.setHeader("Content-type", "application/json")
         post.setEntity(new StringEntity("{ \"this\": \"this\", \"other\": \"more\" }"))
@@ -83,11 +83,10 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-      WireMockServer.start
+        WireMockServer.start
 
       When("I call DELETE on the stubbed endpoint")
 
-        val url = s"http://localhost:$PORT/resource/it";
         val delete = new HttpDelete(url)
         delete.setHeader("Content-type", "application/json")
         val response = (new DefaultHttpClient).execute(delete)
@@ -98,7 +97,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
         responseBody should equal("Successfully deleted")
     }
 
-    scenario("Illogical path DELETE") {
+    scenario("Illogical state transtion for DELETE") {
 
       Given("I have Wiremock running")
 
@@ -106,7 +105,6 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       When("I call DELETE on the stubbed endpoint")
 
-        val url = s"http://localhost:$PORT/resource/it";
         val delete = new HttpDelete(url)
         delete.setHeader("Content-type", "application/json")
         val response = (new DefaultHttpClient).execute(delete)
@@ -116,6 +114,32 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
         responseBody should equal("Invalid state transition for action:delete")
 
+    }
+
+    scenario("Bad contract POST") {
+
+      Given("I have Wiremock running")
+
+      WireMockServer.start
+
+      When("I call POST on the stubbed endpoint")
+
+        val post = new HttpPost(url)
+        post.setHeader("Content-type", "application/json")
+        post.setEntity(new StringEntity("{ \"this\": \"this\", \"other\": 1 }"))
+        val response = (new DefaultHttpClient).execute(post)
+
+      Then("the it should respond with an error")
+
+        var exception: Exception = null
+        try {
+          WireMockServer.stop
+        } catch {
+         case ex: SwaggerValidationException =>
+            exception = ex
+        }
+        exception should not equal (null)
+        WireMockServer.wireMockListener.reset()
     }
 
 
