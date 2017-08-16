@@ -23,7 +23,7 @@ import scala.io.Source
 
 /**
   * Created by toorap on 01/08/2017.
-  * Example usage of Wiremock
+  * Example usage of Code as Contract
   */
 class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {
 
@@ -35,8 +35,10 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
     WireMockServer.configue(PORT, jsonPath)
   }
 
+  // normally this would be the step that catches the contract validation errors
+  // bit for this example we are checking in the test explicitly
   override def afterEach() {
-    WireMockServer.stop
+    //WireMockServer.stop
   }
 
 
@@ -116,7 +118,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
     }
 
-    scenario("Bad contract POST") {
+    scenario("Bad contract POST on request") {
 
       Given("I have Wiremock running")
 
@@ -139,7 +141,33 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
             exception = ex
         }
         exception should not equal (null)
-        WireMockServer.wireMockListener.reset()
+    }
+
+    scenario("Bad contract POST on stub") {
+
+      Given("I have Wiremock running")
+
+      WireMockServer.start
+
+      When("I call POST on the stubbed endpoint")
+
+      val post = new HttpPost(url)
+      post.setHeader("Content-type", "application/json")
+      post.setHeader("scenario", "bad")
+      post.setEntity(new StringEntity("{ \"this\": \"this\", \"other\": \"more\" }"))
+      val response = (new DefaultHttpClient).execute(post)
+
+      Then("it should respond with an error")
+
+      var exception: Exception = null
+      try {
+        WireMockServer.stop
+      } catch {
+        case ex: SwaggerValidationException =>
+          exception = ex
+      }
+      response.getStatusLine.getStatusCode should equal(301)
+      exception should not equal (null)
     }
 
 

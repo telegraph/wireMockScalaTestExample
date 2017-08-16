@@ -76,6 +76,31 @@ object WireMockServer {
           .withBody("Successfully added")
           .withStatus(201)))
 
+    wireMockServer.stubFor(post(urlMatching(".*/it"))
+      .withRequestBody(matchingJsonPath("$.this"))
+      .withRequestBody(matchingJsonPath("$.other"))
+      .withHeader("scenario", equalTo("bad"))
+      .willReturn(
+        aResponse()
+          .withTransformerParameter("action", "post")
+          .withHeader("Content-Type", "application/json")
+          .withBody("Bad scenario")
+          .withStatus(301)))
+
+    wireMockServer.stubFor(post(urlMatching(".*/it"))
+      .withRequestBody(matchingJsonPath("$.this"))
+      .withRequestBody(matchingJsonPath("$.other"))
+      .withHeader("scenario", absent())
+      .willReturn(
+        aResponse()
+          .withTransformerParameter("action", "post")
+          .withHeader("Content-Type", "application/json")
+          .withBody("Successfully added")
+          .withStatus(201)))
+
+
+
+    // examples of other usages
     wireMockServer.stubFor(get(urlMatching(".*/sad"))
       .willReturn(
         aResponse()
