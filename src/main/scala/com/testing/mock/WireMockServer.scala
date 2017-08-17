@@ -14,6 +14,8 @@ import scala.io.Source
 
 /**
  * @author ${parsh.toora}
+  *
+  * Alternative mechanisms for validating state can use '.withTransformerParameter("", "")
   */
 
 object WireMockServer {
