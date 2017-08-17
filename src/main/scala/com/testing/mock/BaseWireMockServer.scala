@@ -18,8 +18,6 @@ abstract class BaseWireMockServer {
   var wireMockServer: WireMockServer = null;
   private var wireMockListener: SwaggerValidationListener = null
 
-  var stateTransitions : Map[String, Map[String,String]]
-
   def configureStub(inputSwaggerFile: String, inputPort: Int, cannedResponsesPath: String): Unit = {
     // port and swagger defn
     var port: Int = 8080
@@ -55,6 +53,8 @@ abstract class BaseWireMockServer {
     wireMockListener.assertValidationPassed()
     wireMockListener.reset()
   }
+
+  protected var stateTransitions : Map[String, Map[String,String]]
 
   protected def setUpMocks(cannedResponsesPath: String): Unit
 }

@@ -28,6 +28,7 @@ object MyStub extends BaseWireMockServer {
 
     // post matching on body simulating happy path add transitoning state
     stateTransitions("post") foreach {
+
       case (inState, outState) =>
         wireMockServer.stubFor(post(urlMatching(".*/it"))
           .inScenario("state")
@@ -46,6 +47,7 @@ object MyStub extends BaseWireMockServer {
 
     // delete where items exist in document
     stateTransitions("delete") foreach {
+
       case (inState, outState) =>
         wireMockServer.stubFor(
         delete(urlMatching(".*/it$"))
@@ -90,8 +92,5 @@ object MyStub extends BaseWireMockServer {
           .withHeader("Content-Type", "application/json")
           .withBody("{ \"first\":\"Waitied\", \"second\":\"5\" }")
           .withStatus(200)))
-
-    Scenario.inStartedState()
   }
-
 }
