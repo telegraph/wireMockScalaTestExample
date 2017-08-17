@@ -114,7 +114,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Then("the it should return an error")
 
-        responseBody should equal("Invalid state transition for action:delete")
+        responseBody should equal("Nothing to delete")
 
     }
 

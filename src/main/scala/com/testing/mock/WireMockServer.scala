@@ -7,6 +7,8 @@ import com.github.tomakehurst.wiremock.common.FileSource
 import com.github.tomakehurst.wiremock.extension.{Parameters, PostServeAction, ResponseTransformer}
 import com.github.tomakehurst.wiremock.http.{Request, Response, ResponseDefinition}
 import com.atlassian.oai.validator.wiremock.SwaggerValidationListener
+import com.github.tomakehurst.wiremock.stubbing.Scenario
+
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -50,61 +52,70 @@ object WireMockServer {
     if (filePath!=null)
       jsonPath=filePath
 
-    wireMockServer = new WireMockServer(options().port(port).extensions(new ValidateStateTransitionTransformer()))
+    wireMockServer = new WireMockServer(options().port(port))
     wireMockListener =  new SwaggerValidationListener(Source.fromFile(s"$jsonPath/openApi.json").mkString)
     wireMockServer.addMockServiceRequestListener(wireMockListener)
     println ( s"Wiremock Starting on port $port")
 
     // set mock responses
+
+    // happy path get
     wireMockServer.stubFor(get(urlMatching(".*/it"))
       .willReturn(
         aResponse()
-          .withTransformerParameter("action", "get")
           .withHeader("Content-Type", "application/json")
           .withBody(Source.fromFile(s"$jsonPath/happy.json").mkString)
           .withStatus(200)))
 
-    wireMockServer.stubFor(delete(urlMatching(".*/it$"))
-      .willReturn(
-        aResponse()
-          .withTransformerParameter("action", "delete")
+    // delete where items exist in document
+    wireMockServer.stubFor(
+      delete(urlMatching(".*/it$"))
+        .inScenario("")
+        .whenScenarioStateIs("exists")
+        .willReturn(
+          aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody("Successfully deleted")
           .withStatus(200))
+        .willSetStateTo(Scenario.STARTED)
     )
 
+    // delete when state is no items in document
+    wireMockServer.stubFor(
+      delete(urlMatching(".*/it$"))
+        .inScenario("")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody("Nothing to delete")
+            .withStatus(500))
+    )
+
+    // post matching on body simulating happy path add
     wireMockServer.stubFor(post(urlMatching(".*/it"))
+      .inScenario("")
       .withRequestBody(matchingJsonPath("$.this"))
       .withRequestBody(matchingJsonPath("$.other"))
+      .withHeader("scenario", absent())
       .willReturn(
         aResponse()
-          .withTransformerParameter("action", "post")
           .withHeader("Content-Type", "application/json")
           .withBody("Successfully added")
-          .withStatus(201)))
+          .withStatus(201))
+        .willSetStateTo("exists")
+    )
 
+    // post similtaing invalid return status
     wireMockServer.stubFor(post(urlMatching(".*/it"))
       .withRequestBody(matchingJsonPath("$.this"))
       .withRequestBody(matchingJsonPath("$.other"))
       .withHeader("scenario", equalTo("bad"))
       .willReturn(
         aResponse()
-          .withTransformerParameter("action", "post")
           .withHeader("Content-Type", "application/json")
           .withBody("Bad scenario")
           .withStatus(301)))
-
-    wireMockServer.stubFor(post(urlMatching(".*/it"))
-      .withRequestBody(matchingJsonPath("$.this"))
-      .withRequestBody(matchingJsonPath("$.other"))
-      .withHeader("scenario", absent())
-      .willReturn(
-        aResponse()
-          .withTransformerParameter("action", "post")
-          .withHeader("Content-Type", "application/json")
-          .withBody("Successfully added")
-          .withStatus(201)))
-
 
 
     // examples of other usages
@@ -125,53 +136,6 @@ object WireMockServer {
           .withHeader("Content-Type", "application/json")
           .withBody("{ \"first\":\"Waitied\", \"second\":\"5\" }")
           .withStatus(200)))
-  }
-
-
-  // simple state transition validator
-  object ValidateStateModel {
-
-    var count = 0
-    var errorsList = ListBuffer[String]()
-
-    def isValidStateTransition(action: String) : Boolean = {
-
-      if (action == "get") {
-        // ok
-      } else if (List("put", "post").contains(action)) {
-        count = count + 1
-      } else if (action == "delete" && count==0) {
-        errorsList += "Error: - Cannot delete from empty state ... doh!"
-        return false
-      } else if (action=="delete" && count>0) {
-        count = count -1
-      }
-      true
-    }
-  }
-
-
-  // validate the state transitions
-  class ValidateStateTransitionTransformer extends ResponseTransformer {
-
-    override def transform(request :Request, response: Response, files :FileSource, parameters: Parameters) : Response = {
-
-      // if not valid mangle the response else let it be
-      if (ValidateStateModel.isValidStateTransition(parameters.getString("action"))==false) {
-
-        Response.Builder.like(response)
-          .but()
-          .body("Invalid state transition for action:" + parameters.getString("action"))
-          .status(500)
-          .build();
-      } else {
-        Response.Builder.like(response).build()
-      }
-    }
-
-    override def getName() : String = {
-      "validateStateTransition"
-    }
   }
 }
 
