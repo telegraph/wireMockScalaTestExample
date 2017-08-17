@@ -1,21 +1,14 @@
 package com.testing.tests
 
-import java.io.File
-import java.net.{HttpURLConnection, URL}
-import java.util
 
-import com.testing.mock.WireMockServer
-import org.apache.http.NameValuePair
-import org.apache.http.client.entity.UrlEncodedFormEntity
+import com.testing.mock.{BaseWireMockServer, MyStub}
 import org.apache.http.client.methods.{HttpDelete, HttpGet, HttpPost}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.message.BasicNameValuePair
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec, GivenWhenThen}
 import org.scalatest._
-import java.net.{HttpURLConnection, URL}
-
 import com.atlassian.oai.validator.wiremock.SwaggerValidationListener.SwaggerValidationException
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.apache.http.util.EntityUtils
 
 import scala.io.Source
@@ -27,16 +20,18 @@ import scala.io.Source
   */
 class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll with BeforeAndAfterEach with Matchers {
 
-  val PORT= "8080"
+  val PORT= 8080
   val jsonPath = getClass.getResource("").getPath + "/../../../../../src/resources"
+  val swaggerSchema = jsonPath+"/openApi.json"
   val url = s"http://localhost:$PORT/resource/it";
 
+
   override def beforeAll() {
-    WireMockServer.configue(PORT, jsonPath)
+    MyStub.configureStub(swaggerSchema, PORT, jsonPath)
   }
 
   override def afterEach() {
-    WireMockServer.stop
+    MyStub.stop
   }
 
   /*
@@ -48,7 +43,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-        WireMockServer.start
+        MyStub.start
 
       When("I call GET on the stubbed endpoint")
 
@@ -67,7 +62,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-        WireMockServer.start
+        MyStub.start
 
       When("I call POST on the stubbed endpoint")
 
@@ -85,7 +80,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-        WireMockServer.start
+      MyStub.start
 
       When("I call DELETE on the stubbed endpoint")
 
@@ -103,18 +98,17 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running and I have deleted it")
 
-        WireMockServer.start
+      MyStub.start
 
       When("I call DELETE on the stubbed endpoint")
 
         val delete = new HttpDelete(url)
         delete.setHeader("Content-type", "application/json")
         val response = (new DefaultHttpClient).execute(delete)
-        val responseBody = EntityUtils.toString(response.getEntity())
 
       Then("the it should return an error")
 
-        responseBody should equal("Nothing to delete")
+        response.getStatusLine.getStatusCode should equal (404)
 
     }
 
@@ -122,7 +116,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-      WireMockServer.start
+      MyStub.start
 
       When("I call POST on the stubbed endpoint with in invalid payload")
 
@@ -135,7 +129,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
         var exception: Exception = null
         try {
-          WireMockServer.validateContract
+          MyStub.validateContract
         } catch {
          case ex: SwaggerValidationException =>
             exception = ex
@@ -147,7 +141,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       Given("I have Wiremock running")
 
-      WireMockServer.start
+      MyStub.start
 
       When("I call POST on the stubbed endpoint where the stub returns the wrong status")
 
@@ -161,7 +155,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
 
       var exception: Exception = null
       try {
-        WireMockServer.validateContract
+        MyStub.validateContract
       } catch {
         case ex: SwaggerValidationException =>
           exception = ex
