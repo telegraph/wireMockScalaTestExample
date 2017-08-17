@@ -11,6 +11,11 @@ import scala.io.Source
 object MyStub extends BaseWireMockServer {
 
 
+  override var stateTransitions =    Map(
+      "delete" -> Map("exists" -> Scenario.STARTED),
+      "post" -> Map(Scenario.STARTED -> "exists", "exists" -> "exists"))
+
+
   override def setUpMocks(cannedResponsesPath: String): Unit  = {
 
     // happy path get
@@ -21,33 +26,39 @@ object MyStub extends BaseWireMockServer {
           .withBody(Source.fromFile(s"$cannedResponsesPath/happy.json").mkString)
           .withStatus(200)))
 
+    // post matching on body simulating happy path add transitoning state
+    stateTransitions("post") foreach {
+      case (inState, outState) =>
+        wireMockServer.stubFor(post(urlMatching(".*/it"))
+          .inScenario("state")
+          .whenScenarioStateIs(inState)
+          .withRequestBody(matchingJsonPath("$.this"))
+          .withRequestBody(matchingJsonPath("$.other"))
+          .withHeader("scenario", absent())
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withBody("Successfully added")
+              .withStatus(201))
+          .willSetStateTo(outState)
+        )
+    }
+
     // delete where items exist in document
-    wireMockServer.stubFor(
-      delete(urlMatching(".*/it$"))
+    stateTransitions("delete") foreach {
+      case (inState, outState) =>
+        wireMockServer.stubFor(
+        delete(urlMatching(".*/it$"))
         .inScenario("state")
-        .whenScenarioStateIs("exists")
+        .whenScenarioStateIs(inState)
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody("Successfully deleted")
             .withStatus(200))
-        .willSetStateTo(Scenario.STARTED)
-    )
-
-    // post matching on body simulating happy path add
-    wireMockServer.stubFor(post(urlMatching(".*/it"))
-      .inScenario("state")
-      .whenScenarioStateIs(Scenario.STARTED)
-      .withRequestBody(matchingJsonPath("$.this"))
-      .withRequestBody(matchingJsonPath("$.other"))
-      .withHeader("scenario", absent())
-      .willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody("Successfully added")
-          .withStatus(201))
-        .willSetStateTo("exists")
-    )
+        .willSetStateTo(outState)
+      )
+    }
 
     // post simulating invalid return status
     wireMockServer.stubFor(post(urlMatching(".*/it"))
