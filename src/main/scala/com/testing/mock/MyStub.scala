@@ -11,7 +11,9 @@ import scala.io.Source
 object MyStub extends BaseWireMockServer {
 
 
+  // map of action -> map  of pre-start, post-state
   override var stateTransitions =    Map(
+      "get" -> Map(Scenario.STARTED -> Scenario.STARTED, "exists" -> "exists"),
       "delete" -> Map("exists" -> Scenario.STARTED),
       "post" -> Map(Scenario.STARTED -> "exists", "exists" -> "exists"))
 
@@ -19,12 +21,20 @@ object MyStub extends BaseWireMockServer {
   override def setUpMocks(cannedResponsesPath: String): Unit  = {
 
     // happy path get
-    wireMockServer.stubFor(get(urlMatching(".*/it"))
-      .willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(Source.fromFile(s"$cannedResponsesPath/happy.json").mkString)
-          .withStatus(200)))
+    stateTransitions("get") foreach {
+
+      case (inState, outState) =>
+        wireMockServer.stubFor(get(urlMatching(".*/it"))
+          .inScenario("state")
+          .whenScenarioStateIs(inState)
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withBody(Source.fromFile(s"$cannedResponsesPath/happy.json").mkString)
+              .withStatus(200))
+          .willSetStateTo(outState)
+        )
+    }
 
     // post matching on body simulating happy path add transitoning state
     stateTransitions("post") foreach {
@@ -33,8 +43,6 @@ object MyStub extends BaseWireMockServer {
         wireMockServer.stubFor(post(urlMatching(".*/it"))
           .inScenario("state")
           .whenScenarioStateIs(inState)
-          .withRequestBody(matchingJsonPath("$.this"))
-          .withRequestBody(matchingJsonPath("$.other"))
           .withHeader("scenario", absent())
           .willReturn(
             aResponse()
@@ -64,8 +72,6 @@ object MyStub extends BaseWireMockServer {
 
     // post simulating invalid return status
     wireMockServer.stubFor(post(urlMatching(".*/it"))
-      .withRequestBody(matchingJsonPath("$.this"))
-      .withRequestBody(matchingJsonPath("$.other"))
       .withHeader("scenario", equalTo("bad"))
       .willReturn(
         aResponse()

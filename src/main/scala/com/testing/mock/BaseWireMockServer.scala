@@ -54,6 +54,7 @@ abstract class BaseWireMockServer {
     wireMockListener.reset()
   }
 
+  // action -> pre-start, post-state
   protected var stateTransitions : Map[String, Map[String,String]]
 
   protected def setUpMocks(cannedResponsesPath: String): Unit
