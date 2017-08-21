@@ -1,7 +1,6 @@
 {
   "swagger": "2.0",
-  "info": {
-  },
+  "info": {},
   "host": "localhost:8080",
   "basePath": "/resource",
    "paths": {
@@ -10,7 +9,10 @@
         "description": "",
         "responses": {
           "200": {
-            "description": "response"
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
           }
         }
       },
@@ -65,7 +67,16 @@
           "type": "string"
         }
       }
+    },
+    "ApiResponse": {
+      "properties": {
+        "first": {
+          "type": "string"
+        },
+        "second": {
+          "type": "string"
+        }
+      }
     }
   }
-
 }
