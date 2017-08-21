@@ -55,6 +55,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
       Then("the it should respond with the correct payload")
 
         responseBody should equal (Source.fromFile(s"$jsonPath/happy.json").mkString)
+        MyStub.validateContract
     }
 
 
@@ -74,6 +75,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
       Then("the it should respond with the correct payload")
 
         response.getStatusLine.getStatusCode should equal(201)
+        MyStub.validateContract
     }
 
     scenario("Happy path DELETE") {
@@ -92,6 +94,7 @@ class TestBasicGet extends FeatureSpec with GivenWhenThen with BeforeAndAfterAll
       Then("the it should respond with the correct payload")
 
         responseBody should equal("Successfully deleted")
+        MyStub.validateContract
     }
 
     scenario("Illogical state transtion for DELETE") {
