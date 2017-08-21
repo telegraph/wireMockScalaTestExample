@@ -7,11 +7,12 @@ import scala.io.Source
 
 /**
   * Created by toorap on 17/08/2017.
+  * Example of a stub encapsulating contract and state
   */
 object MyStub extends BaseWireMockServer {
 
 
-  // map of action -> map  of pre-start, post-state
+  // map of action -> map  of pre-state, post-state
   override var stateTransitions =    Map(
       "get" -> Map(Scenario.STARTED -> Scenario.STARTED, "exists" -> "exists"),
       "delete" -> Map("exists" -> Scenario.STARTED),
